@@ -2,10 +2,14 @@ package io.hhplus.tdd.exception
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.context.request.WebRequest
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
 
@@ -29,4 +33,15 @@ class ApiControllerAdvice : ResponseEntityExceptionHandler() {
         )
     }
 
+    override fun handleMethodArgumentNotValid(
+        ex: MethodArgumentNotValidException,
+        headers: HttpHeaders,
+        status: HttpStatusCode,
+        request: WebRequest
+    ): ResponseEntity<Any>? {
+        return ResponseEntity(
+            ErrorResponse("400", ex.bindingResult.allErrors[0].defaultMessage ?: "잘못된 요청입니다."),
+            HttpStatus.BAD_REQUEST
+        )
+    }
 }

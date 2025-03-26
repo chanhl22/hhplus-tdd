@@ -1,6 +1,7 @@
 package io.hhplus.tdd.point
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.hhplus.tdd.point.user.request.UserPointRequest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -89,12 +90,12 @@ class PointControllerTest {
     fun charge() {
         //given
         val requestId = 1L
-        val requestAmount = 1000L
+        val request = UserPointRequest(1000L)
 
         //when //then
         mockMvc.perform(
             MockMvcRequestBuilders.patch("/point/${requestId}/charge")
-                .content(objectMapper.writeValueAsString(requestAmount))
+                .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andDo(MockMvcResultHandlers.print())
@@ -106,12 +107,12 @@ class PointControllerTest {
     fun charge2() {
         //given
         val requestId = "error"
-        val requestAmount = 1000L
+        val request = UserPointRequest(1000L)
 
         //when //then
         mockMvc.perform(
             MockMvcRequestBuilders.patch("/point/${requestId}/charge")
-                .content(objectMapper.writeValueAsString(requestAmount))
+                .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andDo(MockMvcResultHandlers.print())
@@ -120,17 +121,36 @@ class PointControllerTest {
             .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("잘못된 요청입니다."))
     }
 
+    @DisplayName("유저의 포인트를 충전할 때 포인트는 양수이다.")
+    @Test
+    fun charge3() {
+        //given
+        val requestId = 1L
+        val request = UserPointRequest(0L)
+
+        //when //then
+        mockMvc.perform(
+            MockMvcRequestBuilders.patch("/point/${requestId}/charge")
+                .content(objectMapper.writeValueAsString(request))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isBadRequest())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("400"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("포인트는 양수여야 합니다."))
+    }
+
     @DisplayName("유저의 포인트를 사용한다.")
     @Test
     fun use() {
         //given
         val requestId = 1L
-        val requestAmount = 1000L
+        val request = UserPointRequest(1000L)
 
         //when //then
         mockMvc.perform(
             MockMvcRequestBuilders.patch("/point/${requestId}/use")
-                .content(objectMapper.writeValueAsString(requestAmount))
+                .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andDo(MockMvcResultHandlers.print())
@@ -142,18 +162,37 @@ class PointControllerTest {
     fun use2() {
         //given
         val requestId = "error"
-        val requestAmount = 1000L
+        val request = UserPointRequest(1000L)
 
         //when //then
         mockMvc.perform(
             MockMvcRequestBuilders.patch("/point/${requestId}/use")
-                .content(objectMapper.writeValueAsString(requestAmount))
+                .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isBadRequest())
             .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("400"))
             .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("잘못된 요청입니다."))
+    }
+
+    @DisplayName("유저의 포인트를 사용할 때 포인트는 양수이다.")
+    @Test
+    fun use3() {
+        //given
+        val requestId = 1L
+        val request = UserPointRequest(0L)
+
+        //when //then
+        mockMvc.perform(
+            MockMvcRequestBuilders.patch("/point/${requestId}/use")
+                .content(objectMapper.writeValueAsString(request))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isBadRequest())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("400"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("포인트는 양수여야 합니다."))
     }
 
 }

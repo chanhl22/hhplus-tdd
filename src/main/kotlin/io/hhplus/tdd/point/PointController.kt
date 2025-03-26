@@ -1,7 +1,9 @@
 package io.hhplus.tdd.point
 
 import io.hhplus.tdd.point.history.response.PointHistoryResponse
+import io.hhplus.tdd.point.user.request.UserPointRequest
 import io.hhplus.tdd.point.user.response.UserPointResponse
+import jakarta.validation.Valid
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.*
@@ -37,9 +39,9 @@ class PointController (private val pointService: PointService){
     @PatchMapping("/{id}/charge")
     fun charge(
         @PathVariable id: Long,
-        @RequestBody amount: Long,
+        @RequestBody @Valid request: UserPointRequest,
     ): UserPointResponse {
-        return pointService.chargePoint(id, amount)
+        return pointService.chargePoint(id, request.amount)
     }
 
     /**
@@ -48,8 +50,8 @@ class PointController (private val pointService: PointService){
     @PatchMapping("/{id}/use")
     fun use(
         @PathVariable id: Long,
-        @RequestBody amount: Long,
+        @RequestBody @Valid request: UserPointRequest,
     ): UserPointResponse {
-        return pointService.usePoint(id, amount)
+        return pointService.usePoint(id, request.amount)
     }
 }
