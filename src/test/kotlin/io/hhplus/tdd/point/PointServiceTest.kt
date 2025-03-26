@@ -5,6 +5,7 @@ import io.hhplus.tdd.point.history.TransactionType
 import io.hhplus.tdd.point.user.UserPoint
 import io.hhplus.tdd.point.user.UserPointRepository
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -85,11 +86,27 @@ class PointServiceTest {
             .containsExactly(userPoint.id, point + chargeAmount)
     }
 
+    @DisplayName("유저의 포인트를 충전할 수 없으면 예외가 발생한다.")
+    @Test
+    fun chargePoint2() {
+        //given
+        val userId = 4L
+        val point = 1000000000L
+        saveUserPoint(userId, point)
+
+        val chargeAmount = 1L
+
+        //when //then
+        assertThatThrownBy { pointService.chargePoint(userId, chargeAmount) }
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessage("포인트가 초과 되었습니다.")
+    }
+
     @DisplayName("유저의 포인트를 차감한다.")
     @Test
     fun usePoint() {
         //given
-        val userId = 4L
+        val userId = 5L
         val point = 10000L
         val userPoint = saveUserPoint(userId, point)
 
@@ -102,6 +119,22 @@ class PointServiceTest {
         assertThat(result)
             .extracting("id", "point")
             .containsExactly(userPoint.id, point - useAmount)
+    }
+
+    @DisplayName("유저의 포인트를 차감할 수 없으면 예외가 발생한다.")
+    @Test
+    fun usePoint2() {
+        //given
+        val userId = 6L
+        val point = 10000L
+        saveUserPoint(userId, point)
+
+        val useAmount = 10001L
+
+        //when //then
+        assertThatThrownBy { pointService.usePoint(userId, useAmount) }
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessage("포인트가 부족합니다.")
     }
 
     private fun saveUserPoint(userId: Long, point: Long): UserPoint {

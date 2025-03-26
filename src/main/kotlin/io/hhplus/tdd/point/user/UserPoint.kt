@@ -18,14 +18,14 @@ class UserPoint(
     }
 
     fun increasePoint(amount: Long) {
-        if (isPointMoreThan(amount)) {
+        if (isExceedMaxPoint(amount)) {
             throw IllegalArgumentException("포인트를 더 충전할 수 없습니다.")
         }
         point += amount
     }
 
-    private fun isPointMoreThan(amount: Long) = point + amount > MAX_POINT
+    fun isPointLessThan(amount: Long) = point < amount
 
-    private fun isPointLessThan(amount: Long) = point < amount
+    fun isExceedMaxPoint(amount: Long) = point + amount > MAX_POINT
 
 }

@@ -61,4 +61,38 @@ class UserPointTest {
             .hasMessage("포인트를 더 충전할 수 없습니다.")
     }
 
+    @DisplayName("포인트를 차감할 수 있는지 확인한다.")
+    @Test
+    fun isPointLessThan() {
+        //given
+        val amount = 1000L
+        val userPoint1 = UserPoint(1, 1000L, System.currentTimeMillis())
+        val userPoint2 = UserPoint(1, 999L, System.currentTimeMillis())
+
+        //when
+        val result1 = userPoint1.isPointLessThan(amount)
+        val result2 = userPoint2.isPointLessThan(amount)
+
+        //then
+        assertThat(result1).isFalse()
+        assertThat(result2).isTrue()
+    }
+
+    @DisplayName("포인트를 충전할 수 있는지 확인한다.")
+    @Test
+    fun isExceedMaxPoint() {
+        //given
+        val amount = 1L
+        val userPoint1 = UserPoint(1, 99999999L, System.currentTimeMillis())
+        val userPoint2 = UserPoint(1, 1000000000L, System.currentTimeMillis())
+
+        //when
+        val result1 = userPoint1.isExceedMaxPoint(amount)
+        val result2 = userPoint2.isExceedMaxPoint(amount)
+
+        //then
+        assertThat(result1).isFalse()
+        assertThat(result2).isTrue()
+    }
+
 }
