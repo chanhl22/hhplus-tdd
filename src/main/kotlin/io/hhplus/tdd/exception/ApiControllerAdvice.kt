@@ -1,4 +1,4 @@
-package io.hhplus.tdd
+package io.hhplus.tdd.exception
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -6,9 +6,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
-
-data class ErrorResponse(val code: String, val message: String)
 
 @RestControllerAdvice
 class ApiControllerAdvice : ResponseEntityExceptionHandler() {
@@ -21,4 +20,13 @@ class ApiControllerAdvice : ResponseEntityExceptionHandler() {
             HttpStatus.INTERNAL_SERVER_ERROR,
         )
     }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException::class)
+    fun handleException(e: MethodArgumentTypeMismatchException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity(
+            ErrorResponse("400", "잘못된 요청입니다."),
+            HttpStatus.BAD_REQUEST
+        )
+    }
+
 }
