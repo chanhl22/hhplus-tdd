@@ -11,6 +11,9 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 
 @SpringBootTest
 class PointServiceTest {
@@ -109,11 +112,83 @@ class PointServiceTest {
             .hasMessage("포인트가 초과 되었습니다.")
     }
 
+    @DisplayName("동시에 100 포인트를 증가시킨다.")
+    @Test
+    fun chargePoint3() {
+        //given
+        val userId = 9L
+        val point = 999990000L
+        saveUserPoint(userId, point)
+
+        val useAmount = 100L
+
+        val threadCount = 100
+        val executorService = Executors.newFixedThreadPool(32)
+        val latch = CountDownLatch(threadCount)
+
+        //when
+        for (idx in 1..threadCount) {
+            executorService.execute {
+                try {
+                    pointService.chargePoint(userId, useAmount)
+                } finally {
+                    latch.countDown()
+                }
+            }
+        }
+
+        latch.await()
+
+        //then
+        val result = pointService.findPoint(userId)
+        assertThat(result.point).isEqualTo(1000000000L)
+    }
+
+    @DisplayName("가지고 있는 포인트가 999,999,000L일 때 동시에 100 포인트를 증가시키면 10개만 성공하고 나머지는 실패한다.")
+    @Test
+    fun chargePoint4() {
+        //given
+        val userId = 10L
+        val point = 999999000L
+        saveUserPoint(userId, point)
+
+        val useAmount = 100L
+
+        val threadCount = 100
+        val executorService = Executors.newFixedThreadPool(32)
+        val latch = CountDownLatch(threadCount)
+
+        //when
+        val successCount = AtomicInteger(0)
+        val failCount = AtomicInteger(0)
+
+        for (idx in 1..threadCount) {
+            executorService.execute {
+                try {
+                    pointService.chargePoint(userId, useAmount)
+                    successCount.incrementAndGet()
+                } catch (e: Exception) {
+                    failCount.incrementAndGet()
+                } finally {
+                    latch.countDown()
+                }
+            }
+        }
+
+        latch.await()
+
+        //then
+        val result = pointService.findPoint(userId)
+        assertThat(result.point).isEqualTo(1000000000L)
+        assertThat(successCount.get()).isEqualTo(10)
+        assertThat(failCount.get()).isEqualTo(90)
+    }
+
     @DisplayName("유저의 포인트를 차감한다.")
     @Test
     fun usePoint() {
         //given
-        val userId = 5L
+        val userId = 7L
         val point = 10000L
         val userPoint = saveUserPoint(userId, point)
 
@@ -139,7 +214,7 @@ class PointServiceTest {
     @Test
     fun usePoint2() {
         //given
-        val userId = 6L
+        val userId = 8L
         val point = 10000L
         saveUserPoint(userId, point)
 
@@ -149,6 +224,78 @@ class PointServiceTest {
         assertThatThrownBy { pointService.usePoint(userId, useAmount) }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessage("포인트가 부족합니다.")
+    }
+
+    @DisplayName("동시에 100 포인트를 감소시킨다.")
+    @Test
+    fun usePoint3() {
+        //given
+        val userId = 9L
+        val point = 10000L
+        saveUserPoint(userId, point)
+
+        val useAmount = 100L
+
+        val threadCount = 100
+        val executorService = Executors.newFixedThreadPool(32)
+        val latch = CountDownLatch(threadCount)
+
+        //when
+        for (idx in 1..threadCount) {
+            executorService.execute {
+                try {
+                    pointService.usePoint(userId, useAmount)
+                } finally {
+                    latch.countDown()
+                }
+            }
+        }
+
+        latch.await()
+
+        //then
+        val result = pointService.findPoint(userId)
+        assertThat(result.point).isEqualTo(0L)
+    }
+
+    @DisplayName("가지고 있는 포인트가 1000일 때 동시에 100 포인트를 감소시키면 10개만 성공하고 나머지는 실패한다.")
+    @Test
+    fun usePoint4() {
+        //given
+        val userId = 10L
+        val point = 1000L
+        saveUserPoint(userId, point)
+
+        val useAmount = 100L
+
+        val threadCount = 100
+        val executorService = Executors.newFixedThreadPool(32)
+        val latch = CountDownLatch(threadCount)
+
+        //when
+        val successCount = AtomicInteger(0)
+        val failCount = AtomicInteger(0)
+
+        for (idx in 1..threadCount) {
+            executorService.execute {
+                try {
+                    pointService.usePoint(userId, useAmount)
+                    successCount.incrementAndGet()
+                } catch (e: Exception) {
+                    failCount.incrementAndGet()
+                } finally {
+                    latch.countDown()
+                }
+            }
+        }
+
+        latch.await()
+
+        //then
+        val result = pointService.findPoint(userId)
+        assertThat(result.point).isEqualTo(0L)
+        assertThat(successCount.get()).isEqualTo(10)
+        assertThat(failCount.get()).isEqualTo(90)
     }
 
     private fun saveUserPoint(userId: Long, point: Long): UserPoint {
