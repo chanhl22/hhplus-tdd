@@ -84,6 +84,13 @@ class PointServiceTest {
         assertThat(result)
             .extracting("id", "point")
             .containsExactly(userPoint.id, point + chargeAmount)
+
+        val pointHistories = pointHistoryRepository.findAllByUserId(userId)
+        assertThat(pointHistories).hasSize(1)
+            .extracting("userId", "type", "amount")
+            .containsExactly(
+                tuple(userId, TransactionType.CHARGE, chargeAmount),
+            )
     }
 
     @DisplayName("유저의 포인트를 충전할 수 없으면 예외가 발생한다.")
@@ -119,6 +126,13 @@ class PointServiceTest {
         assertThat(result)
             .extracting("id", "point")
             .containsExactly(userPoint.id, point - useAmount)
+
+        val pointHistories = pointHistoryRepository.findAllByUserId(userId)
+        assertThat(pointHistories).hasSize(1)
+            .extracting("userId", "type", "amount")
+            .containsExactly(
+                tuple(userId, TransactionType.USE, useAmount),
+            )
     }
 
     @DisplayName("유저의 포인트를 차감할 수 없으면 예외가 발생한다.")
